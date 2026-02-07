@@ -1,4 +1,4 @@
-# WebUntis Examples & Automations
+# WebUntis Examples & Automations Test
 
 This page contains **ready-to-use automation examples** and template snippets for the WebUntis Home Assistant integration.
 Replace `<name>` with your actual WebUntis integration device name.
