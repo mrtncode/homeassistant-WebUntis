@@ -501,17 +501,17 @@ class WebUntis:
                         for service in self.notify_config.values():
                             if "homework" in service.get("options", []):
 
-                                data = {
-                                    "data": service.get("data", {}),
-                                    "target": service.get("target", {}),
-                                }
+                                # start with any user‑defined data and target
+                                data = {}
+                                data.update(service.get("data", {}))
+                                data["target"] = service.get("target", {})
 
                                 dic, notify_data = get_notification_data_homework(
                                     event, service, self.title, self
                                 )
 
                                 for key, value in notify_data.items():
-                                    data["data"][key] = value
+                                    data[key] = value
 
                                 data.update(dic)
 
@@ -1216,10 +1216,9 @@ class WebUntis:
                 for change, lesson, lesson_old in updated_items:
                     if change in service.get("options", []):
 
-                        data = {
-                            "data": service.get("data", {}),
-                            "target": service.get("target", {}),
-                        }
+                        data = {}
+                        data.update(service.get("data", {}))
+                        data["target"] = service.get("target", {})
 
                         changes = get_changes(change, lesson, lesson_old, server=self)
 
@@ -1228,7 +1227,7 @@ class WebUntis:
                         )
 
                         for key, value in notify_data.items():
-                            data["data"][key] = value
+                            data[key] = value
 
                         data.update(dic)
 

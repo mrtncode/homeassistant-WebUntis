@@ -761,10 +761,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             for service in user_input.get("services", {}):
                 config = self._config_entry.options["notify_config"][service]
 
-                data = {
-                    "data": config.get("data", {}),
-                    "target": config.get("target", {}),
-                }
+                data = {}
+                data.update(config.get("data", {}))
+                data["target"] = config.get("target", {})
 
                 changes = {
                     "change": "test",
@@ -780,7 +779,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 )
 
                 for key, value in notify_data.items():
-                    data["data"][key] = value
+                    data[key] = value
 
                 data.update(dic)
 
