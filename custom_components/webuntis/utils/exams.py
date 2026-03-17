@@ -45,12 +45,10 @@ class ExamEventsFetcher:
 
         # Process each exam entry and create a CalendarEvent object
         for exam in exams:
-            exam_id = exam.get("id", None)
             exam_type = exam.get("examType", "Unknown Type")
             name = exam.get("name", "No Name")
             subject = exam.get("subject", "Unknown Subject")
             text = exam.get("text", "")
-            grade = exam.get("grade", "")
 
             assigned_students = exam.get("assignedStudents", [])
             if assigned_students:  # Checks if the list is not empty

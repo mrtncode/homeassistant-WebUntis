@@ -34,7 +34,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             end_date = datetime.strptime(data["end"], "%Y-%m-%d")
 
             if end_date < start_date:
-                raise HomeAssistantError(f"Start date has to be before end date")
+                raise HomeAssistantError("Start date has to be before end date")
 
         await hass.async_add_executor_job(webuntis_object.webuntis_login)
 

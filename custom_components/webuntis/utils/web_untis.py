@@ -19,9 +19,6 @@ def get_timetable_object(timetable_source_id, timetable_source, session):
     return {timetable_source: source}
 
 
-from datetime import datetime
-
-
 def get_lesson_name(server, lesson):
 
     def get_attr(obj, attr, default=None):
@@ -51,7 +48,6 @@ def get_lesson_name(server, lesson):
     name = server.lesson_replace_name.get(subject, subject)
 
     if subject in server.lesson_add_teacher:
-
         teachers = get_attr(lesson, "teachers", [])
         if teachers:
             teacher = get_attr(teachers[0], "name", None)

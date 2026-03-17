@@ -39,7 +39,12 @@ from .const import (
     NAME_EVENT_LESSON_CHANGE,
     NAME_EVENT_HOMEWORK,
 )
-from .notify import *
+from .notify import (
+    compare_timetables,
+    get_changes,
+    get_notification_data,
+    get_notification_data_homework,
+)
 from .services import async_setup_services
 from .utils.utils import compact_list, async_notify
 
@@ -381,9 +386,7 @@ class WebUntis:
             )
 
         try:
-            self.klassen = await self._hass.async_add_executor_job(
-                self.session.klassen
-            )
+            self.klassen = await self._hass.async_add_executor_job(self.session.klassen)
         except OSError as error:
             self.klassen = []
 
@@ -1120,7 +1123,7 @@ class WebUntis:
                     self.exclude_data_run.append("teachers")
                     self.exclude_data.append("teachers")
 
-            except:
+            except Exception:
                 pass
 
             try:
@@ -1128,7 +1131,7 @@ class WebUntis:
                     {"name": str(teacher.name), "long_name": str(teacher.long_name)}
                     for teacher in lesson.original_teachers
                 ]
-            except:
+            except Exception:
                 pass
 
         dic["name"] = get_lesson_name(self, lesson)
@@ -1206,7 +1209,7 @@ class WebUntis:
                     self.exclude_data_run.append("teachers")
                     self.exclude_data.append("teachers")
 
-            except:
+            except Exception:
                 pass
 
         return dic

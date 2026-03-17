@@ -107,7 +107,7 @@ class BaseUntisCalendar(WebUntisEntity, CalendarEntity):
         self.events = self._get_events()
 
         if self.events:
-            self.events.sort(key=lambda e: (e.end))
+            self.events.sort(key=lambda e: e.end)
             now = datetime.datetime.now()
 
             for event in self.events:

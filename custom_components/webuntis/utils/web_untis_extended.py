@@ -4,7 +4,6 @@ from webuntis import errors
 from webuntis.utils import log  # pylint: disable=no-name-in-module
 from webuntis.session import Session as WebUntisSession
 
-import logging
 
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -37,7 +36,7 @@ class ExtendedSession(WebUntisSession):
 
         # Ensure session is logged in
         if "jsessionid" in self.config:
-            headers["Cookie"] = f'JSESSIONID={self.config["jsessionid"]}'
+            headers["Cookie"] = f"JSESSIONID={self.config['jsessionid']}"
         else:
             raise errors.NotLoggedInError("No JSESSIONID found. Please log in first.")
 

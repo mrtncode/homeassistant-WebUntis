@@ -29,7 +29,6 @@ from .const import (
     TEMPLATE_OPTIONS,
 )
 from .notify import get_notification_data
-from .utils.errors import *
 from .utils.utils import async_notify, is_service
 from .utils.web_untis import get_timetable_object
 

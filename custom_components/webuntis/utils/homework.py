@@ -73,9 +73,7 @@ class HomeworkEventsFetcher:
             completed = homework.get("completed", False)
 
             date_assigned = datetime.strptime(str(date_assigned_int), "%Y%m%d").date()
-            due_date = datetime.strptime(
-                str(due_date_int), "%Y%m%d"
-            ).date()
+            due_date = datetime.strptime(str(due_date_int), "%Y%m%d").date()
 
             # Find the corresponding record to get the teacher ID
             record = next((rec for rec in records if rec["homeworkId"] == hw_id), None)
@@ -90,7 +88,14 @@ class HomeworkEventsFetcher:
             teacher_name = teacher.get("name", "Unknown Teacher")
 
             # Find the corresponding lesson
-            lesson = next((l for l in lessons if l["id"] == lesson_id), {})
+            lesson = next(
+                (
+                    lesson_item
+                    for lesson_item in lessons
+                    if lesson_item["id"] == lesson_id
+                ),
+                {},
+            )
             subject = lesson.get("subject", "Unknown Subject")
 
             summary = get_lesson_name_str(self.server, subject, teachers[0]["name"])

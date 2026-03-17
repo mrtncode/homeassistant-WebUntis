@@ -5,23 +5,22 @@ from .utils.web_untis import get_lesson_name_str, get_lesson_name
 
 def compare_timetables(old_timetable, new_timetable) -> list:
     updated_items = []
-    
+
     # Create a dictionary for lookup of old lessons
     # Using (lsnumber, start) as the key for matching
     old_lessons_map = {
-        (lesson["lsnumber"], lesson["start"]): lesson 
-        for lesson in old_timetable
+        (lesson["lsnumber"], lesson["start"]): lesson for lesson in old_timetable
     }
-    
+
     for new_lesson in new_timetable:
         # Look up the corresponding old lesson using the key
         key = (new_lesson["lsnumber"], new_lesson["start"])
-        
+
         if key not in old_lessons_map:
             continue
-        
+
         old_lesson = old_lessons_map[key]
-        
+
         # if compared lessons are the same
         if new_lesson == old_lesson:
             continue
@@ -39,17 +38,15 @@ def compare_timetables(old_timetable, new_timetable) -> list:
         # compare lesson rooms
         if new_lesson.get("code", "None") != "cancelled":
             if (
-                (
-                    "rooms" in new_lesson
-                    and "rooms" in old_lesson
-                    and new_lesson["rooms"]
-                    and old_lesson["rooms"]
-                    and new_lesson["rooms"] != old_lesson["rooms"] 
-                ) or (
-                    "rooms" not in new_lesson
-                    and "rooms" in old_lesson
-                    and old_lesson["rooms"]
-                )
+                "rooms" in new_lesson
+                and "rooms" in old_lesson
+                and new_lesson["rooms"]
+                and old_lesson["rooms"]
+                and new_lesson["rooms"] != old_lesson["rooms"]
+            ) or (
+                "rooms" not in new_lesson
+                and "rooms" in old_lesson
+                and old_lesson["rooms"]
             ):
                 updated_items.append(["rooms", new_lesson, old_lesson])
 
@@ -66,17 +63,15 @@ def compare_timetables(old_timetable, new_timetable) -> list:
         # compare lesson teachers
         if new_lesson.get("code", "None") != "cancelled":
             if (
-                (
-                    "teachers" in new_lesson
-                    and "teachers" in old_lesson
-                    and new_lesson["teachers"]
-                    and old_lesson["teachers"]
-                    and new_lesson["teachers"] != old_lesson["teachers"]
-                ) or (
-                    "teachers" not in new_lesson
-                    and "teachers" in old_lesson
-                    and old_lesson["teachers"]
-                )
+                "teachers" in new_lesson
+                and "teachers" in old_lesson
+                and new_lesson["teachers"]
+                and old_lesson["teachers"]
+                and new_lesson["teachers"] != old_lesson["teachers"]
+            ) or (
+                "teachers" not in new_lesson
+                and "teachers" in old_lesson
+                and old_lesson["teachers"]
             ):
                 updated_items.append(["teachers", new_lesson, old_lesson])
 
@@ -85,7 +80,7 @@ def compare_timetables(old_timetable, new_timetable) -> list:
         new_lstext = new_lesson.get("lstext", "") or ""
         if new_lstext != old_lstext:
             updated_items.append(["lstext", new_lesson, old_lesson])
-        
+
         # compare lesson info (text that the teacher wrote for students)
         old_info = old_lesson.get("info", "") or ""
         new_info = new_lesson.get("info", "") or ""
@@ -265,7 +260,7 @@ def get_changes(change, lesson, lesson_old, server):
         "teachers": "Teacher changed",
         "lstext": "Lesson text changed",
         "subject": "Subject changed",
-        "info": "Info text changed"
+        "info": "Info text changed",
     }[change]
 
     changes["subject"] = get_lesson_name(server, lesson)
