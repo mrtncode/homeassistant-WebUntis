@@ -97,8 +97,8 @@ class BaseUntisCalendar(WebUntisEntity, CalendarEntity):
             if event_end.tzinfo is None:
                 event_end = event_end.replace(tzinfo=timezone)
 
-            # Now compare the event start and end with the given range
-            if event_start >= start_date and event_end <= end_date:
+            # Include events that overlap the requested range, including ongoing events.
+            if event_end > start_date and event_start < end_date:
                 events_in_range.append(event)
 
         return events_in_range
@@ -108,9 +108,10 @@ class BaseUntisCalendar(WebUntisEntity, CalendarEntity):
         self.events = self._get_events()
 
         if self.events:
-            self.events.sort(key=lambda e: (e.end))
-            now = datetime.datetime.now()
+            self.events.sort(key=lambda e: e.start_datetime_local)
+            now = dt_util.now()
 
+            self._event = None
             for event in self.events:
                 if event.end_datetime_local.astimezone() > now.astimezone():
                     self._event = event

@@ -46,10 +46,16 @@ class BaseUntisEventEntity(WebUntisEntity, EventEntity):
         self._server = server
         self._attr_event_types = event_types
         self.id = name
+        self._ignore_first_event = True
 
     @callback
     def _async_handle_event(self, event: str, data: dict) -> None:
         """Handle incoming event and update state."""
+        if self._ignore_first_event:
+            self._ignore_first_event = False
+            return
+        if not self.hass.is_running:
+            return
         self._trigger_event(event, data)
         self.async_write_ha_state()
 
