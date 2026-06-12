@@ -28,7 +28,13 @@
           "timetable_source_id": "Full name/Class"
         },
         "data_description": {
-          "timetable_source_id": "Enter the full name of the student/teacher or the class name"
+          "timetable_source_id": "Enter the full name of the student/teacher or the class name",
+          "school": "Don't know how to get the school name? [Click here](https://example.com) for instructions."
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "Advanced Options (optional)"
+          }
         }
       },
       "timetable_source": {
