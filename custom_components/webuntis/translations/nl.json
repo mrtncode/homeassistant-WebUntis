@@ -19,7 +19,6 @@
     "step": {
       "user": {
         "data": {
-          "server": "Server",
           "school": "School",
           "username": "Gebruikersnaam",
           "password": "Wachtwoord",
@@ -27,7 +26,16 @@
           "timetable_source_id": "Full name/Class"
         },
         "data_description": {
-          "timetable_source_id": "Enter the full name of the student/teacher or the class name"
+          "timetable_source_id": "Enter the full name of the student/teacher or the class name",
+          "school": "Weet je niet hoe je de schoolnaam kunt achterhalen? [Klik hier]() voor instructies."
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "uitgebreide opties (optioneel)",
+            "data": {
+              "server": "Server URL"
+            }
+          }
         }
       },
       "timetable_source": {
