@@ -417,7 +417,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except webuntis.errors.RemoteError as exc:  # pylint: disable=no-member
             errors["school"] = "school_not_found"
-            raise (exc)
         except Exception as exc:
             _LOGGER.error("webuntis.Session unknown error: %s", exc)
             errors["base"] = "unknown"
