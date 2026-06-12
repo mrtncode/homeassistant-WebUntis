@@ -52,6 +52,11 @@
         "data": {
           "klasse": "Class"
         }
+      },
+      "reconfigure": {
+        "data": {
+          "password": "Wachtwoord"
+        }
       }
     }
   },

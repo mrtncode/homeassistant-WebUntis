@@ -56,6 +56,11 @@
           "klasse": "Class",
           "back": "Back"
         }
+      },
+      "reconfigure": {
+        "data": {
+          "password": "Password"
+        }
       }
     }
   },
