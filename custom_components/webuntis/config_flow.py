@@ -47,6 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _session_temp = None
     _user_input_temp = {}
     _source_id = None
+    _reconfigure = False
 
     @staticmethod
     @callback
@@ -55,6 +56,35 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.OptionsFlow:
         """Create the options flow."""
         return OptionsFlowHandler(config_entry)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult | FlowResult:
+        """Handle reconfiguration of an existing entry."""
+        self._reconfigure = True
+        # During reconfigure only allow changing password and timetable source (otherwise the entity id is deprecated)
+        entry = self._get_reconfigure_entry()
+        current = entry.data if entry else {}
+
+        if user_input:
+            # Merge submitted fields with existing fixed fields so validate_login has server, school and username
+            merged = {**current, **user_input}
+            errors, self._session_temp = await self.validate_login(merged)
+
+            if not errors:
+                merged["school"] = current.get("school")
+                merged["username"] = current.get("username")
+                self._user_input_temp = merged
+                return await self.async_step_timetable_source()
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    "password": str,
+                }
+            ),
+        )
 
     async def async_step_user(
         self,
@@ -266,6 +296,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             f"{self._source_id}@{user_input['school']}".lower().replace(" ", "-")
         )
         self._abort_if_unique_id_configured()
+        # If the flow was started as a reconfigure, update and reload the existing entry instead of creating a new one.
+        if self._reconfigure:
+            return self.async_update_reload_and_abort(
+                entry=self._get_reconfigure_entry(), data=user_input
+            )
+
         return self.async_create_entry(
             title=user_input["username"],
             data=user_input,
