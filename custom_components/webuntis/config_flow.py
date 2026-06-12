@@ -58,13 +58,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler(config_entry)
 
     async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, Any] | None = None,
     ) -> config_entries.ConfigFlowResult | FlowResult:
         """Handle reconfiguration of an existing entry."""
         self._reconfigure = True
         # During reconfigure only allow changing password and timetable source (otherwise the entity id is deprecated)
         entry = self._get_reconfigure_entry()
         current = entry.data if entry else {}
+        errors = errors or {}
 
         if user_input:
             # Merge submitted fields with existing fixed fields so validate_login has server, school and username
@@ -84,6 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "password": str,
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_user(
@@ -381,7 +385,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             await hass.async_add_executor_job(session.login)
         except webuntis.errors.BadCredentialsError:
-            errors["username"] = "bad_credentials"
+            errors["base"] = "bad_credentials"
         except requests.exceptions.ConnectionError as exc:
             _LOGGER.error("webuntis.Session connection error: %s", exc)
             errors["server"] = "cannot_connect"
