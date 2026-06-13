@@ -7,7 +7,7 @@
       "cannot_connect": "Verbindung fehlgeschlagen. Überprüfe die Server-Domain.",
       "invalid_auth": "Ungültige Authentifizierung",
       "bad_credentials": "Ungültiger Benutzername und/oder Passwort",
-      "school_not_found": "Es wurde keine Schulen gefunden. Versuche es mit einem anderen Suchbegriff.",
+      "school_not_found": "Es wurden keine Schulen gefunden. Versuche es mit einem anderen Suchbegriff.",
       "name_split_error": "Ungültiger Name. Versuche \"Vorname, Nachname\".",
       "student_not_found": "Schüler nicht gefunden. Überprüfen Sie den Namen oder wählen Sie eine andere Quelle.",
       "teacher_not_found": "Lehrer nicht gefunden. Überprüfen Sie den Namen oder wählen Sie eine andere Quelle.",
