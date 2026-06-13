@@ -107,8 +107,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             results = await self.hass.async_add_executor_job(search_schools, query)
             schools = results.get("schools", [])
-            _LOGGER.debug("Search for schools with query '%s' returned %d results", query, len(schools))
-            _LOGGER.debug("Search results: %s", schools)
             if not schools:
                 # no results -> show error
                 _LOGGER.debug("No schools found for query: %s", query)
@@ -116,8 +114,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             elif len(schools) == 1:
                 # single match -> set school directly
                 _LOGGER.debug("One school found: %s", schools[0].get("name"))
-                self._user_input_temp["school"] = schools[0].get("login_name")
                 self._selected_school = schools[0]
+                self._user_input_temp["school"] = schools[0].get("login_name")
+                self._user_input_temp["server"] = schools[0].get("server")
+
                 return await self.async_step_auth()
             else:
                 # multiple results -> save and show choose_school step
@@ -345,6 +345,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 self._selected_school = selected_school
                 self._user_input_temp["school"] = selected_school["login_name"]
+                self._user_input_temp["server"] = selected_school.get("server")
                 return await self.async_step_auth()
 
         return self.async_show_form(
@@ -465,20 +466,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         session = None
         server = credentials.get("advanced_options", {}).get("server")
 
-        if server:
-            server = server.strip()
-            if not server.lower().startswith(("http://", "https://")):
-                server = "https://" + server
+        if not server:
+            # use server from selected school (provided by the untis search)
+            school_obj = self._selected_school or {}
+            server = school_obj.get("server")
 
-            parsed = urlparse(server)
-            hostname = parsed.hostname
-            credentials["server"] = f"{parsed.scheme}://{parsed.netloc}"
-        else:
-            server = f"https://{credentials['school']}.webuntis.com"
-            credentials["server"] = server
-            parsed = urlparse(server)
-            hostname = parsed.hostname
-            _LOGGER.debug("No server provided, use URL: %s", credentials["server"])
+        if not server:
+            errors["base"] = "cannot_connect"
+            return errors, None
+
+        server = server.strip()
+
+        if not server.lower().startswith(("http://", "https://")):
+            server = "https://" + server
+
+        parsed = urlparse(server)
+        hostname = parsed.hostname
+
+        if not hostname:
+            _LOGGER.error("Invalid server URL: %s", server)
+            errors["base"] = "cannot_connect"
+            return errors, None
+
+        credentials["server"] = f"{parsed.scheme}://{parsed.netloc}"
 
         if hostname is None:
             _LOGGER.error(
