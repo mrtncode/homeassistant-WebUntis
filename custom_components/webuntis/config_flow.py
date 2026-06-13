@@ -112,13 +112,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("No schools found for query: %s", query)
                 errors["school"] = "school_not_found"
             elif len(schools) == 1:
-                # single match -> set school directly
                 _LOGGER.debug("One school found: %s", schools[0].get("name"))
-                self._selected_school = schools[0]
-                self._user_input_temp["school"] = schools[0].get("login_name")
-                self._user_input_temp["server"] = schools[0].get("server")
-
-                return await self.async_step_auth()
+                if schools[0].get("login_name") == query:
+                    _LOGGER.debug("Name matches query, skipping choose_school step")
+                    self._selected_school = schools[0]
+                    self._user_input_temp["school"] = schools[0].get("login_name")
+                    self._user_input_temp["server"] = schools[0].get("server")
+                    return await self.async_step_auth()
+                else:
+                    _LOGGER.debug("Name does not match query, go to choose_school step")
+                    self._search_results = schools
+                    return await self.async_step_choose_school()
             else:
                 # multiple results -> save and show choose_school step
                 _LOGGER.debug("%d schools found for query '%s', asking user to choose", len(schools), query)
