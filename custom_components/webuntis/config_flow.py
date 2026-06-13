@@ -138,17 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
             data_schema=vol.Schema(
                 {
-                    vol.Required("school", default=user_input.get("school", "")): str,
-                    vol.Required("advanced_options"): data_entry_flow_section(
-                        vol.Schema(
-                            {
-                                vol.Optional(
-                                    "server", default=user_input.get("server", "")
-                                ): str,
-                            }
-                        ),
-                        {"collapsed": True},
-                    ),
+                    vol.Required("school", default=user_input.get("school", "")): str
                 }
             ),
             errors=errors,
