@@ -33,6 +33,7 @@ from .notify import get_notification_data
 from .utils.errors import *
 from .utils.utils import async_notify, is_service
 from .utils.web_untis import get_timetable_object
+from .utils.search_schools import search_schools
 
 # import webuntis.session
 
@@ -96,27 +97,39 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input: dict[str, Any] | None = None,
         errors: dict[str, Any] | None = None,
     ) -> FlowResult | config_entries.ConfigFlowResult:
-        if user_input is not None:
-            errors, self._session_temp = await self.validate_login(user_input)
+        # First step: accept a school name or search query
+        errors = errors or {}
 
-            if not errors:
-                self._user_input_temp = user_input
-                return await self.async_step_timetable_source()
+        if user_input is not None:
+            self._user_input_temp.update(user_input)
+
+            query = user_input.get("school", "").strip()
+
+            # run search in executor (search_schools is sync)
+            results = await self.hass.async_add_executor_job(search_schools, query)
+
+            if not results:
+                # no results -> show error
+                errors["school"] = "school_not_found"
+            elif len(results) == 1:
+                # single match -> set school and proceed to auth
+                self._user_input_temp["school"] = results[0].name
+                return await self.async_step_auth()
+            else:
+                # multiple results -> save and show choose_school step
+                self._search_results = results
+                return await self.async_step_choose_school()
 
         user_input = user_input or {}
 
         return self.async_show_form(
             step_id="user",
-            description_placeholders={"school_help_url": "https://github.com/JonasJoKuJonas/homeassistant-WebUntis/blob/main/docs/SETUP.md#configuration-via-ui"},
+            description_placeholders={
+                "school_help_url": "https://github.com/JonasJoKuJonas/homeassistant-WebUntis/blob/main/docs/SETUP.md#configuration-via-ui"
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required("school", default=user_input.get("school", "")): str,
-                    vol.Required(
-                        "username", default=user_input.get("username", "")
-                    ): str,
-                    vol.Required(
-                        "password", default=user_input.get("password", "")
-                    ): str,
                     vol.Required("advanced_options"): data_entry_flow_section(
                         vol.Schema(
                             {
@@ -265,7 +278,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pick_klasse(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> FlowResult | config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -305,6 +318,58 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    async def async_step_choose_school(self, user_input: dict[str, Any] | None = None) -> FlowResult | config_entries.ConfigFlowResult:
+        """Ask user to choose a school from search results."""
+        errors = {}
+        # build options from previously stored search results
+        options = {r.name: r.name for r in getattr(self, "_search_results", [])}
+
+        if user_input is not None:
+            choice = user_input.get("school_choice")
+            if not choice:
+                errors["school_choice"] = "required"
+            else:
+                self._user_input_temp["school"] = choice
+                return await self.async_step_auth()
+
+        return self.async_show_form(
+            step_id="choose_school",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required("school_choice"): selector.SelectSelector(
+                        selector.SelectSelectorConfig(options=list(options.keys()))
+                    )
+                }
+            ),
+        )
+
+    async def async_step_auth(self, user_input: dict[str, Any] | None = None, errors: dict[str, Any] | None = None) -> FlowResult | config_entries.ConfigFlowResult:
+        """Authenticate with username/password after school is chosen."""
+        errors = errors or {}
+
+        if user_input is not None:
+            # merge stored inputs (school, server) with username/password
+            merged = {**self._user_input_temp, **user_input}
+            errors, self._session_temp = await self.validate_login(merged)
+            if not errors:
+                # save final data and create entry
+                self._user_input_temp.update(user_input)
+                return await self.async_step_timetable_source()
+
+        user_input = user_input or {}
+
+        return self.async_show_form(
+            step_id="auth",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("username", default=user_input.get("username", "")): str,
+                    vol.Required("password", default=user_input.get("password", "")): str,
+                }
+            ),
+            errors=errors,
+        )
+
     async def create_entry(self):
         user_input = self._user_input_temp
         await self.async_set_unique_id(
@@ -327,7 +392,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> FlowResult | config_entries.ConfigFlowResult:
         if user_input is None:
             user_input = {}
 
