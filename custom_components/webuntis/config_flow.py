@@ -158,10 +158,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Ask user to choose a school from search results."""
         errors = {}
         _LOGGER.debug("Showing choose_school form with search results: %s", self._search_results)
-        options = {
-            school["login_name"]: f'{school["name"]} ({school["address"]})'
-            for school in self._search_results
-        }
 
         if user_input is not None:
             choice = user_input.get("school_choice")

@@ -20,9 +20,6 @@
     "step": {
       "user": {
         "data": {
-          "school": "School",
-          "username": "Username",
-          "password": "Password",
           "timetable_source": "Timetable source",
           "timetable_source_id": "Full name/Class"
         },
@@ -37,6 +34,11 @@
               "server": "Server URL"
             }
           }
+        }
+      },
+      "choose_school": {
+        "data": {
+          "school_choice": "Choose your school:"
         }
       },
       "auth": {
