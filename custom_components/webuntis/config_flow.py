@@ -19,6 +19,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.data_entry_flow import section as data_entry_flow_section
 from homeassistant.helpers import selector
 
 from .const import (
@@ -94,7 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> FlowResult | config_entries.ConfigFlowResult:
         if user_input is not None:
             errors, self._session_temp = await self.validate_login(user_input)
 
@@ -106,9 +107,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            description_placeholders={"school_help_url": "https://github.com/JonasJoKuJonas/homeassistant-WebUntis/blob/main/docs/SETUP.md#configuration-via-ui"},
             data_schema=vol.Schema(
                 {
-                    vol.Required("server", default=user_input.get("server", "")): str,
                     vol.Required("school", default=user_input.get("school", "")): str,
                     vol.Required(
                         "username", default=user_input.get("username", "")
@@ -116,6 +117,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         "password", default=user_input.get("password", "")
                     ): str,
+                    vol.Required("advanced_options"): data_entry_flow_section(
+                        vol.Schema(
+                            {
+                                vol.Optional(
+                                    "server", default=user_input.get("server", "")
+                                ): str,
+                            }
+                        ),
+                        {"collapsed": True},
+                    ),
                 }
             ),
             errors=errors,
@@ -354,25 +365,42 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def validate_login(self, credentials: dict[str, Any]) -> dict[str, Any]:
+    async def validate_login(
+        self, credentials: dict[str, Any]
+    ) -> dict[str, Any] | tuple[dict[Any, Any], Any]:
         hass: HomeAssistant = self.hass
 
         errors = {}
+        session = None
+        server = credentials.get("advanced_options", {}).get("server")
 
-        server = credentials["server"].strip()
+        if server:
+            server = server.strip()
+            if not server.lower().startswith(("http://", "https://")):
+                server = "https://" + server
 
-        if not server.lower().startswith(("http://", "https://")):
-            server = "https://" + server
+            parsed = urlparse(server)
+            hostname = parsed.hostname
+            credentials["server"] = f"{parsed.scheme}://{parsed.netloc}"
+        else:
+            server = f"https://{credentials['school']}.webuntis.com"
+            credentials["server"] = server
+            parsed = urlparse(server)
+            hostname = parsed.hostname
+            _LOGGER.debug("No server provided, use URL: %s", credentials["server"])
 
-        parsed = urlparse(server)
-        hostname = parsed.hostname
-        credentials["server"] = f"{parsed.scheme}://{parsed.netloc}"
+        if hostname is None:
+            _LOGGER.error(
+                "Cannot resolve hostname(%s): invalid hostname", credentials["server"]
+            )
+            errors["base"] = "cannot_connect"
+            return errors, None
 
         try:
             socket.gethostbyname(hostname)
         except Exception as exc:
             _LOGGER.error("Cannot resolve hostname(%s): %s", credentials["server"], exc)
-            errors["server"] = "cannot_connect"
+            errors["base"] = "cannot_connect"
             return errors, None
 
         try:
@@ -388,10 +416,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "bad_credentials"
         except requests.exceptions.ConnectionError as exc:
             _LOGGER.error("webuntis.Session connection error: %s", exc)
-            errors["server"] = "cannot_connect"
+            errors["base"] = "cannot_connect"
         except webuntis.errors.RemoteError as exc:  # pylint: disable=no-member
             errors["school"] = "school_not_found"
-            raise (exc)
         except Exception as exc:
             _LOGGER.error("webuntis.Session unknown error: %s", exc)
             errors["base"] = "unknown"

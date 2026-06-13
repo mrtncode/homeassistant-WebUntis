@@ -20,7 +20,6 @@
     "step": {
       "user": {
         "data": {
-          "server": "Server",
           "school": "School",
           "username": "Username",
           "password": "Password",
@@ -28,7 +27,16 @@
           "timetable_source_id": "Full name/Class"
         },
         "data_description": {
-          "timetable_source_id": "Enter the full name of the student/teacher or the class name"
+          "timetable_source_id": "Enter the full name of the student/teacher or the class name",
+          "school": "Don't know how to get the school name? [Click here]({school_help_url}) for instructions."
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "Advanced Options (optional)",
+            "data": {
+              "server": "Server URL"
+            }
+          }
         }
       },
       "timetable_source": {

@@ -35,24 +35,27 @@ TZ=Europe/Berlin
 
 ## Configuration via UI
 
-### Server & School
+> [!TIP]
+> ### Find school name
+>Visit https://webuntis.com and search/ open your school.
+>The URL should be something like this:
+>```
+>https://demo-school.webuntis.com/today
+>```
+>Then the schoolname is `demo-school`.
 
-Visit https://webuntis.com and click on your school.
 
-In the URL you should find the information you need:
+
+### Alternative way to find school and server name (not recommended)
+You can find the school field and the server field (optional - in the advanced options) in the URL:
 
 ```
 https://demo.webuntis.com/WebUntis/?school=Demo-School#/basic/login
-        ^^^^^^^^^^^^^^^^^                  ^^^^^^^^^^^
-              Server                          School
+        ^^^^^^^^^^^^^^^^                   ^^^^^^^^^^^
+        Server URL                            School
 ```
 
-If your school has the new address pattern, similar to this:
-
-```
-https://demo-school.webuntis.com/today
-```
-then the server is `https://demo-school.webuntis.com` and the school is `demo-school`.
+---
 
 ### Username and Password
 
