@@ -107,6 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            description_placeholders={"school_help_url": "https://example.com"},
             data_schema=vol.Schema(
                 {
                     vol.Required("school", default=user_input.get("school", "")): str,

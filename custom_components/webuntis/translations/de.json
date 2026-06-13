@@ -28,7 +28,7 @@
         },
         "data_description": {
           "timetable_source_id": "Geben Sie den vollständigen Namen des Schülers/Lehrers oder den Namen der Klasse ein",
-          "school": "Du weißt nicht, wie du den Schulnamen finden kannst? [Klick hier]() für Hilfe."
+          "school": "Du weißt nicht, wie du den Schulnamen finden kannst? [Klick hier]({school_help_url}) für Hilfe."
         },
         "sections": {
           "advanced_options": {
