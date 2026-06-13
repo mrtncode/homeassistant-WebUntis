@@ -105,19 +105,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             query = user_input.get("school", "").strip()
 
-            # run search in executor (search_schools is sync)
             results = await self.hass.async_add_executor_job(search_schools, query)
-
-            if not results:
+            schools = results.get("schools", [])
+            _LOGGER.debug("Search for schools with query '%s' returned %d results", query, len(schools))
+            _LOGGER.debug("Search results: %s", schools)
+            if not schools:
                 # no results -> show error
+                _LOGGER.debug("No schools found for query: %s", query)
                 errors["school"] = "school_not_found"
-            elif len(results) == 1:
-                # single match -> set school and proceed to auth
-                self._user_input_temp["school"] = results[0].name
+            elif len(schools) == 1:
+                # single match -> set school directly
+                _LOGGER.debug("One school found: %s", schools[0].get("name"))
+                self._user_input_temp["school"] = schools[0].get("login_name")
+                self._selected_school = schools[0]
                 return await self.async_step_auth()
             else:
                 # multiple results -> save and show choose_school step
-                self._search_results = results
+                _LOGGER.debug("%d schools found for query '%s', asking user to choose", len(schools), query)
+                self._search_results = schools
                 return await self.async_step_choose_school()
 
         user_input = user_input or {}
@@ -147,7 +152,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_timetable_source(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> FlowResult | config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -203,7 +208,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pick_student(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> FlowResult | config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -241,7 +246,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pick_teacher(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> FlowResult | config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -321,15 +326,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_choose_school(self, user_input: dict[str, Any] | None = None) -> FlowResult | config_entries.ConfigFlowResult:
         """Ask user to choose a school from search results."""
         errors = {}
-        # build options from previously stored search results
-        options = {r.name: r.name for r in getattr(self, "_search_results", [])}
+        _LOGGER.debug("Showing choose_school form with search results: %s", self._search_results)
+        options = {
+            school["login_name"]: f'{school["name"]} ({school["address"]})'
+            for school in self._search_results
+        }
 
         if user_input is not None:
             choice = user_input.get("school_choice")
             if not choice:
                 errors["school_choice"] = "required"
             else:
-                self._user_input_temp["school"] = choice
+                selected_school = next(
+                    school
+                    for school in self._search_results
+                    if school["login_name"] == choice
+                )
+
+                self._selected_school = selected_school
+                self._user_input_temp["school"] = selected_school["login_name"]
                 return await self.async_step_auth()
 
         return self.async_show_form(
@@ -338,9 +353,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required("school_choice"): selector.SelectSelector(
-                        selector.SelectSelectorConfig(options=list(options.keys()))
+                    selector.SelectSelectorConfig(
+                        options=[
+                            selector.SelectOptionDict(
+                                label=f'{school["name"]} ({school["address"]})',
+                                value=school["login_name"],
+                            )
+                            for school in self._search_results
+                        ]
                     )
-                }
+                )
+            }
             ),
         )
 
@@ -361,6 +384,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth",
+                description_placeholders={
+                    "school_name": self._selected_school["name"],
+                },
             data_schema=vol.Schema(
                 {
                     vol.Required("username", default=user_input.get("username", "")): str,

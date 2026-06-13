@@ -39,6 +39,13 @@
           }
         }
       },
+      "auth": {
+        "description": "Please enter your Untis credentials for **{school_name}**.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      },
       "timetable_source": {
         "description": "Select the data source"
       },
