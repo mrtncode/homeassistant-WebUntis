@@ -3,7 +3,7 @@ import requests
 from webuntis import errors
 import json
 
-def search_schools(self, query: str) -> dict:
+def search_schools(query: str) -> dict:
     """Search for schools using the WebUntis school search API."""
 
     url = "https://schoolsearch.webuntis.com/schoolquery2"
