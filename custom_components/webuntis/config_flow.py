@@ -371,7 +371,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         hass: HomeAssistant = self.hass
 
         errors = {}
-        server = credentials["advanced_options"]["server"]
+        session = None
+        server = credentials.get("advanced_options", {}).get("server")
 
         if server:
             server = server.strip()
