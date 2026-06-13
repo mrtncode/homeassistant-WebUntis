@@ -154,6 +154,80 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_choose_school(self, user_input: dict[str, Any] | None = None) -> FlowResult | config_entries.ConfigFlowResult:
+        """Ask user to choose a school from search results."""
+        errors = {}
+        _LOGGER.debug("Showing choose_school form with search results: %s", self._search_results)
+        options = {
+            school["login_name"]: f'{school["name"]} ({school["address"]})'
+            for school in self._search_results
+        }
+
+        if user_input is not None:
+            choice = user_input.get("school_choice")
+            if not choice:
+                errors["school_choice"] = "required"
+            else:
+                selected_school = next(
+                    school
+                    for school in self._search_results
+                    if school["login_name"] == choice
+                )
+
+                self._selected_school = selected_school
+                self._user_input_temp["school"] = selected_school["login_name"]
+                self._user_input_temp["server"] = selected_school.get("server")
+                return await self.async_step_auth()
+
+        return self.async_show_form(
+            step_id="choose_school",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required("school_choice"): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            selector.SelectOptionDict(
+                                label=f'{school["name"]} ({school["address"]})',
+                                value=school["login_name"],
+                            )
+                            for school in self._search_results
+                        ]
+                    )
+                )
+            }
+            ),
+        )
+
+    async def async_step_auth(self, user_input: dict[str, Any] | None = None, errors: dict[str, Any] | None = None) -> FlowResult | config_entries.ConfigFlowResult:
+        """Authenticate with username/password after school is chosen."""
+        errors = errors or {}
+
+        if user_input is not None:
+            # merge stored inputs (school, server) with username/password
+            merged = {**self._user_input_temp, **user_input}
+            errors, self._session_temp = await self.validate_login(merged)
+            if not errors:
+                # save final data and create entry
+                self._user_input_temp.update(user_input)
+                return await self.async_step_timetable_source()
+
+        user_input = user_input or {}
+
+        return self.async_show_form(
+            step_id="auth",
+                description_placeholders={
+                    "school_name": self._selected_school["name"],
+                },
+            data_schema=vol.Schema(
+                {
+                    vol.Required("username", default=user_input.get("username", "")): str,
+                    vol.Required("password", default=user_input.get("password", "")): str,
+                }
+            ),
+            errors=errors,
+        )
+
     async def async_step_timetable_source(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult | config_entries.ConfigFlowResult:
@@ -325,80 +399,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional("back", default=False): bool,
                 }
             ),
-        )
-
-    async def async_step_choose_school(self, user_input: dict[str, Any] | None = None) -> FlowResult | config_entries.ConfigFlowResult:
-        """Ask user to choose a school from search results."""
-        errors = {}
-        _LOGGER.debug("Showing choose_school form with search results: %s", self._search_results)
-        options = {
-            school["login_name"]: f'{school["name"]} ({school["address"]})'
-            for school in self._search_results
-        }
-
-        if user_input is not None:
-            choice = user_input.get("school_choice")
-            if not choice:
-                errors["school_choice"] = "required"
-            else:
-                selected_school = next(
-                    school
-                    for school in self._search_results
-                    if school["login_name"] == choice
-                )
-
-                self._selected_school = selected_school
-                self._user_input_temp["school"] = selected_school["login_name"]
-                self._user_input_temp["server"] = selected_school.get("server")
-                return await self.async_step_auth()
-
-        return self.async_show_form(
-            step_id="choose_school",
-            errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required("school_choice"): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[
-                            selector.SelectOptionDict(
-                                label=f'{school["name"]} ({school["address"]})',
-                                value=school["login_name"],
-                            )
-                            for school in self._search_results
-                        ]
-                    )
-                )
-            }
-            ),
-        )
-
-    async def async_step_auth(self, user_input: dict[str, Any] | None = None, errors: dict[str, Any] | None = None) -> FlowResult | config_entries.ConfigFlowResult:
-        """Authenticate with username/password after school is chosen."""
-        errors = errors or {}
-
-        if user_input is not None:
-            # merge stored inputs (school, server) with username/password
-            merged = {**self._user_input_temp, **user_input}
-            errors, self._session_temp = await self.validate_login(merged)
-            if not errors:
-                # save final data and create entry
-                self._user_input_temp.update(user_input)
-                return await self.async_step_timetable_source()
-
-        user_input = user_input or {}
-
-        return self.async_show_form(
-            step_id="auth",
-                description_placeholders={
-                    "school_name": self._selected_school["name"],
-                },
-            data_schema=vol.Schema(
-                {
-                    vol.Required("username", default=user_input.get("username", "")): str,
-                    vol.Required("password", default=user_input.get("password", "")): str,
-                }
-            ),
-            errors=errors,
         )
 
     async def create_entry(self):
