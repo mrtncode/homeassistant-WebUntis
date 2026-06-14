@@ -50,6 +50,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _user_input_temp = {}
     _source_id = None
     _reconfigure = False
+    _search_results = []
+    _selected_school = None
 
     @staticmethod
     @callback
@@ -105,84 +107,61 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             query = user_input.get("school", "").strip()
 
+            # School is selected
+            selected = user_input.get("school_choice")
+            if selected:
+                selected_school = next(
+                    (school for school in self._search_results if school["login_name"] == selected),
+                    None,
+                )
+                if selected_school:
+                    self._selected_school = selected_school
+                    self._user_input_temp["school"] = selected_school["login_name"]
+                    self._user_input_temp["server"] = selected_school["server"]
+
+                    return await self.async_step_auth()
+
+            # Do search
             results = await self.hass.async_add_executor_job(search_schools, query)
-            schools = results.get("schools", [])
-            if not schools:
+            self._search_results = results.get("schools", [])
+            if not self._search_results:
                 # no results -> show error
                 _LOGGER.debug("No schools found for query: %s", query)
                 errors["school"] = "school_not_found"
-            elif len(schools) == 1:
-                _LOGGER.debug("One school found: %s", schools[0].get("name"))
-                if schools[0].get("login_name") == query:
+
+            elif len(self._search_results) == 1:
+                _LOGGER.debug("One school found: %s", self._search_results[0].get("name"))
+                if self._search_results[0].get("login_name").lower() == query.lower():
                     _LOGGER.debug("Name matches query, skipping choose_school step")
-                    self._selected_school = schools[0]
-                    self._user_input_temp["school"] = schools[0].get("login_name")
-                    self._user_input_temp["server"] = schools[0].get("server")
+                    self._selected_school = self._search_results[0]
+                    self._user_input_temp["school"] = self._search_results[0].get("login_name")
+                    self._user_input_temp["server"] = self._search_results[0].get("server")
                     return await self.async_step_auth()
-                else:
-                    _LOGGER.debug("Name does not match query, go to choose_school step")
-                    self._search_results = schools
-                    return await self.async_step_choose_school()
-            else:
-                # multiple results -> save and show choose_school step
-                _LOGGER.debug("%d schools found for query '%s', asking user to choose", len(schools), query)
-                self._search_results = schools
-                return await self.async_step_choose_school()
 
         user_input = user_input or {}
 
+        schema = {
+            vol.Required("school", default=user_input.get("school", "")): str
+        }
+
+        # Show dropdown if there are search results
+        if getattr(self, "_search_results", None):
+            schema[vol.Optional("school_choice")] = selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        selector.SelectOptionDict(
+                            label=f'{school["name"]} ({school["address"]})',
+                            value=school["login_name"],
+                        )
+                        for school in self._search_results
+                    ]
+                )
+            )
+
         return self.async_show_form(
             step_id="user",
-            description_placeholders={
-                "school_help_url": "https://github.com/JonasJoKuJonas/homeassistant-WebUntis/blob/main/docs/SETUP.md#configuration-via-ui"
-            },
-            data_schema=vol.Schema(
-                {
-                    vol.Required("school", default=user_input.get("school", "")): str
-                }
-            ),
+            data_schema=vol.Schema(schema),
             errors=errors,
-        )
-
-    async def async_step_choose_school(self, user_input: dict[str, Any] | None = None) -> FlowResult | config_entries.ConfigFlowResult:
-        """Ask user to choose a school from search results."""
-        errors = {}
-        _LOGGER.debug("Showing choose_school form with search results: %s", self._search_results)
-
-        if user_input is not None:
-            choice = user_input.get("school_choice")
-            if not choice:
-                errors["school_choice"] = "required"
-            else:
-                selected_school = next(
-                    school
-                    for school in self._search_results
-                    if school["login_name"] == choice
-                )
-
-                self._selected_school = selected_school
-                self._user_input_temp["school"] = selected_school["login_name"]
-                self._user_input_temp["server"] = selected_school.get("server")
-                return await self.async_step_auth()
-
-        return self.async_show_form(
-            step_id="choose_school",
-            errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required("school_choice"): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[
-                            selector.SelectOptionDict(
-                                label=f'{school["name"]} ({school["address"]})',
-                                value=school["login_name"],
-                            )
-                            for school in self._search_results
-                        ]
-                    )
-                )
-            }
-            ),
         )
 
     async def async_step_auth(self, user_input: dict[str, Any] | None = None, errors: dict[str, Any] | None = None) -> FlowResult | config_entries.ConfigFlowResult:
