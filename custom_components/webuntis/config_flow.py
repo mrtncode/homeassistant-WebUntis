@@ -33,6 +33,7 @@ from .notify import get_notification_data
 from .utils.errors import *
 from .utils.utils import async_notify, is_service
 from .utils.web_untis import get_timetable_object
+from .utils.search_schools import search_schools
 
 # import webuntis.session
 
@@ -49,6 +50,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _user_input_temp = {}
     _source_id = None
     _reconfigure = False
+    _search_results = []
+    _selected_school = None
 
     @staticmethod
     @callback
@@ -96,37 +99,95 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input: dict[str, Any] | None = None,
         errors: dict[str, Any] | None = None,
     ) -> FlowResult | config_entries.ConfigFlowResult:
-        if user_input is not None:
-            errors, self._session_temp = await self.validate_login(user_input)
+        # First step: accept a school name or search query
+        errors = errors or {}
 
+        if user_input is not None:
+            self._user_input_temp.update(user_input)
+
+            query = user_input.get("school", "").strip()
+
+            # School is selected
+            selected = user_input.get("school_choice")
+            if selected:
+                selected_school = next(
+                    (school for school in self._search_results if school["login_name"] == selected),
+                    None,
+                )
+                if selected_school:
+                    self._selected_school = selected_school
+                    self._user_input_temp["school"] = selected_school["login_name"]
+                    self._user_input_temp["server"] = selected_school["server"]
+
+                    return await self.async_step_auth()
+
+            # Do search
+            results = await self.hass.async_add_executor_job(search_schools, query)
+            self._search_results = results.get("schools", [])
+            if not self._search_results:
+                # no results -> show error
+                _LOGGER.debug("No schools found for query: %s", query)
+                errors["school"] = "school_not_found"
+
+            elif len(self._search_results) == 1:
+                _LOGGER.debug("One school found: %s", self._search_results[0].get("name"))
+                if self._search_results[0].get("login_name").lower() == query.lower():
+                    _LOGGER.debug("Name matches query, skipping choose_school step")
+                    self._selected_school = self._search_results[0]
+                    self._user_input_temp["school"] = self._search_results[0].get("login_name")
+                    self._user_input_temp["server"] = self._search_results[0].get("server")
+                    return await self.async_step_auth()
+
+        user_input = user_input or {}
+
+        schema = {
+            vol.Required("school", default=user_input.get("school", "")): str
+        }
+
+        # Show dropdown if there are search results
+        if getattr(self, "_search_results", None):
+            schema[vol.Optional("school_choice")] = selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        selector.SelectOptionDict(
+                            label=f'{school["name"]} ({school["address"]})',
+                            value=school["login_name"],
+                        )
+                        for school in self._search_results
+                    ]
+                )
+            )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(schema),
+            errors=errors,
+        )
+
+    async def async_step_auth(self, user_input: dict[str, Any] | None = None, errors: dict[str, Any] | None = None) -> FlowResult | config_entries.ConfigFlowResult:
+        """Authenticate with username/password after school is chosen."""
+        errors = errors or {}
+
+        if user_input is not None:
+            # merge stored inputs (school, server) with username/password
+            merged = {**self._user_input_temp, **user_input}
+            errors, self._session_temp = await self.validate_login(merged)
             if not errors:
-                self._user_input_temp = user_input
+                # save final data and create entry
+                self._user_input_temp.update(user_input)
                 return await self.async_step_timetable_source()
 
         user_input = user_input or {}
 
         return self.async_show_form(
-            step_id="user",
-            description_placeholders={"school_help_url": "https://github.com/JonasJoKuJonas/homeassistant-WebUntis/blob/main/docs/SETUP.md#configuration-via-ui"},
+            step_id="auth",
+                description_placeholders={
+                    "school_name": self._selected_school["name"],
+                },
             data_schema=vol.Schema(
                 {
-                    vol.Required("school", default=user_input.get("school", "")): str,
-                    vol.Required(
-                        "username", default=user_input.get("username", "")
-                    ): str,
-                    vol.Required(
-                        "password", default=user_input.get("password", "")
-                    ): str,
-                    vol.Required("advanced_options"): data_entry_flow_section(
-                        vol.Schema(
-                            {
-                                vol.Optional(
-                                    "server", default=user_input.get("server", "")
-                                ): str,
-                            }
-                        ),
-                        {"collapsed": True},
-                    ),
+                    vol.Required("username", default=user_input.get("username", "")): str,
+                    vol.Required("password", default=user_input.get("password", "")): str,
                 }
             ),
             errors=errors,
@@ -134,7 +195,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_timetable_source(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> FlowResult | config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -190,7 +251,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pick_student(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> FlowResult | config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -228,7 +289,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pick_teacher(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> FlowResult | config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -265,7 +326,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pick_klasse(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> FlowResult | config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -327,7 +388,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> FlowResult | config_entries.ConfigFlowResult:
         if user_input is None:
             user_input = {}
 
@@ -374,20 +435,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         session = None
         server = credentials.get("advanced_options", {}).get("server")
 
-        if server:
-            server = server.strip()
-            if not server.lower().startswith(("http://", "https://")):
-                server = "https://" + server
+        if not server:
+            # use server from selected school (provided by the untis search)
+            school_obj = self._selected_school or {}
+            server = school_obj.get("server")
 
-            parsed = urlparse(server)
-            hostname = parsed.hostname
-            credentials["server"] = f"{parsed.scheme}://{parsed.netloc}"
-        else:
-            server = f"https://{credentials['school']}.webuntis.com"
-            credentials["server"] = server
-            parsed = urlparse(server)
-            hostname = parsed.hostname
-            _LOGGER.debug("No server provided, use URL: %s", credentials["server"])
+        if not server:
+            errors["base"] = "cannot_connect"
+            return errors, None
+
+        server = server.strip()
+
+        if not server.lower().startswith(("http://", "https://")):
+            server = "https://" + server
+
+        parsed = urlparse(server)
+        hostname = parsed.hostname
+
+        if not hostname:
+            _LOGGER.error("Invalid server URL: %s", server)
+            errors["base"] = "cannot_connect"
+            return errors, None
+
+        credentials["server"] = f"{parsed.scheme}://{parsed.netloc}"
 
         if hostname is None:
             _LOGGER.error(
