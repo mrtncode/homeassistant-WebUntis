@@ -22,16 +22,12 @@
         "data": {
           "school": "School name or search term",
           "timetable_source": "Timetable source",
-          "timetable_source_id": "Full name/Class"
+          "timetable_source_id": "Full name/Class",
+          "school_choice": "Choose your school:"
         },
         "data_description": {
           "timetable_source_id": "Enter the full name of the student/teacher or the class name",
           "school": "You do not have to enter the full name of the school.\nThe integration will search for schools matching your input."
-        }
-      },
-      "choose_school": {
-        "data": {
-          "school_choice": "Choose your school:"
         }
       },
       "auth": {
