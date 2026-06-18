@@ -38,7 +38,9 @@
         }
       },
       "timetable_source": {
-        "description": "Wähle die Quelle"
+        "data": {
+          "timetable_source": "Wähle die Datenquelle für den Stundenplan:"
+        }
       },
       "pick_student": {
         "description": "Name eines Schülers eingeben",

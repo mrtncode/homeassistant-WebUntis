@@ -37,7 +37,9 @@
         }
       },
       "timetable_source": {
-        "description": "Select the data source"
+        "data": {
+          "timetable_source": "Selecteer de bron van het rooster:"
+        }
       },
       "pick_student": {
         "description": "Enter a Student Name",

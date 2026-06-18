@@ -433,7 +433,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         session = None
-        server = credentials.get("advanced_options", {}).get("server")
+        server =  credentials.get("server") or credentials.get("advanced_options", {}).get("server") # keep fallback for advanced_options for backward compatibility
 
         if not server:
             # use server from selected school (provided by the untis search)
