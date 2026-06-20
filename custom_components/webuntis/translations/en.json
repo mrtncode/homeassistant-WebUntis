@@ -38,7 +38,9 @@
         }
       },
       "timetable_source": {
-        "description": "Select the data source"
+        "data": {
+          "timetable_source": "Select the timetable data source:"
+        }
       },
       "pick_student": {
         "description": "Enter a Student Name",
