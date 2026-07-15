@@ -550,6 +550,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return schoolyears.current
         except webuntis.errors.RemoteError:
             return None
+        except Exception as exc:
+            _LOGGER.error("Error getting current schoolyear: %s", exc)
+            return None
 
 
 OPTIONS_MENU = [

@@ -329,6 +329,14 @@ class WebUntis:
                 lambda: self.schoolyears.current
             )
 
+        except OSError as error:
+            _LOGGER.warning(
+                "Request for schoolyears of '%s@%s' failed - OSError: %s.",
+                self.school,
+                self.username,
+                error,
+            )
+
             if not self.current_schoolyear:
                 # Login error, set all properties to unknown.
                 self.next_class = None
@@ -357,14 +365,6 @@ class WebUntis:
                 self._last_status_request_failed = True
                 await self._hass.async_add_executor_job(self.webuntis_logout)
                 return
-
-        except OSError as error:
-            _LOGGER.warning(
-                "Request for schoolyears of '%s@%s' failed - OSError: %s",
-                self.school,
-                self.username,
-                error,
-            )
 
         try:
             self.subjects = await self._hass.async_add_executor_job(
@@ -647,18 +647,18 @@ class WebUntis:
 
     def get_timetable(self, start, end: datetime, sort=False):
         """Get the timetable for the given time period"""
-        timetable_object = None
-        if self.timetable_source != "personal":
-            timetable_object = get_timetable_object(
-                self.timetable_source_id, self.timetable_source, self.session
-            )
-
         if not self.current_schoolyear:
             _LOGGER.warning(
                 "No valid school year found for start date %s. Returning empty timetable.",
                 start,
             )
             return []
+
+        timetable_object = None
+        if self.timetable_source != "personal":
+            timetable_object = get_timetable_object(
+                self.timetable_source_id, self.timetable_source, self.session
+            )
 
         # Ensure start and end are within the school year boundaries
         if start < self.current_schoolyear.start.date():
