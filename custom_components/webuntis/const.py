@@ -4,6 +4,8 @@ DOMAIN = "webuntis"
 
 CONFIG_ENTRY_VERSION = 22
 
+CONF_LIVE_ACTIVITIES = "live_activities"
+
 DEFAULT_OPTIONS = {
     "lesson_long_name": True,
     "calendar_show_cancelled_lessons": False,
@@ -15,13 +17,17 @@ DEFAULT_OPTIONS = {
     "exclude_data": [],
     "filter_description": [],
     "lesson_compacting_tolerance": 0,
+    "lesson_compacting_parallel": False,
     "calendar_description": "none",
     "calendar_room": "Room long name",
     "calendar_show_room_change": False,
     "notify_config": {},
     "invalid_subjects": False,
     "exclude_filter_comparison": False,
+    "live_activities": {},
 }
+
+LIVE_ACTIVITY_TAG_SUFFIX = "live_stundenplan"
 
 NOTIFY_OPTIONS = [
     "homework",
