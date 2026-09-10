@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import datetime
 import logging
 import socket
@@ -520,7 +521,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=user_input["username"],
             data=user_input,
-            options=DEFAULT_OPTIONS,
+            options=copy.deepcopy(DEFAULT_OPTIONS),
         )
 
     def _show_form_user(
@@ -894,6 +895,21 @@ class OptionsFlowHandler(config_entries.OptionsFlow, LiveActivityOptionsFlowMixi
                                 "Room short-long name",
                                 "None",
                             ],
+                            mode="dropdown",
+                        )
+                    ),
+                    vol.Required(
+                        "homework_display",
+                        default=str(
+                            self._config_entry.options.get("homework_display", "span")
+                        ),
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                "span",
+                                "due_date",
+                            ],
+                            translation_key="homework_display",
                             mode="dropdown",
                         )
                     ),

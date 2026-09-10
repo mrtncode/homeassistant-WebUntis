@@ -212,14 +212,16 @@
           "calendar_replace_name": "Replace event name",
           "calendar_room": "Calendar - Location",
           "calendar_show_cancelled_lessons": "Calendar - cancelled lessons",
-          "calendar_show_room_change": "Calendar - Room change"
+          "calendar_show_room_change": "Calendar - Room change",
+          "homework_display": "Homework - display mode"
         },
         "data_description": {
           "calendar_description": "Determine what should be in the description of a calendar event.",
           "calendar_replace_name": "e.g.,\nCancelled: ❌",
           "calendar_room": "Specify what to display for location.",
           "calendar_show_cancelled_lessons": "Show cancelled lessons in the calendar.",
-          "calendar_show_room_change": "Show room changes in the calendar."
+          "calendar_show_room_change": "Show room changes in the calendar.",
+          "homework_display": "Choose how homework events appear in the homework calendar: spanning the assigned date through the due date (default), or on the due date only."
         },
         "description": "Settings to customize the calendar.",
         "title": "Calendar Settings"
@@ -237,6 +239,13 @@
         "data_description": {
           "start_offset": "Minutes before the first lesson.",
           "end_offset": "Minutes after the last lesson."
+        }
+      },
+      "edit_live_activity_select": {
+        "title": "Live Timetable",
+        "description": "Choose the Live Activity to edit.",
+        "data": {
+          "services": "Live Activity"
         }
       },
       "edit_notify_service": {
@@ -302,22 +311,36 @@
         "title": "Lesson Display Settings"
       },
       "live_activities_menu": {
-        "title": "Live Timetable",
+        "title": "Live Timetable (Live Activities)",
         "menu_options": {
-          "edit_live_activity": "add Live Timetable",
-          "edit_live_activity_select": "edit Live Timetable",
-          "remove_live_activity": "remove Live Timetable",
-          "test_live_activity": "test Live Timetable"
+          "edit_live_activity": "Add Live Timetable",
+          "edit_live_activity_select": "Edit Live Timetable",
+          "remove_live_activity": "Remove Live Timetable",
+          "test_live_activity": "Test Live Timetable"
         }
       },
       "notify_menu": {
         "menu_options": {
-          "edit_notify_service": "add notify service",
-          "edit_notify_service_select": "edit notify service",
-          "remove_notify_service": "remove notify service",
-          "test_notify_service": "test notify service"
+          "edit_notify_service": "Add notify service",
+          "edit_notify_service_select": "Edit notify service",
+          "remove_notify_service": "Remove notify service",
+          "test_notify_service": "Test notify service"
         },
         "title": "Notify Service"
+      },
+      "remove_live_activity": {
+        "title": "Live Timetable",
+        "description": "Choose the Live Activities to remove.",
+        "data": {
+          "services": "Live Activities"
+        }
+      },
+      "test_live_activity": {
+        "title": "Live Timetable",
+        "description": "Choose the Live Activities to send a test notification to.",
+        "data": {
+          "services": "Live Activities"
+        }
       }
     },
     "error": {
@@ -340,6 +363,12 @@
     "live_activity_platform": {
       "options": {
         "ios": "iOS"
+      }
+    },
+    "homework_display": {
+      "options": {
+        "due_date": "Due date only",
+        "span": "Span (assigned date through due date)"
       }
     },
     "notify_options": {

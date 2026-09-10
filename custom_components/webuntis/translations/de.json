@@ -212,20 +212,22 @@
           "calendar_replace_name": "Ereignisnamen ersetzen",
           "calendar_room": "Kalender - Ort",
           "calendar_show_cancelled_lessons": "Kalender - Ausfallende Stunden",
-          "calendar_show_room_change": "Kalender - Zimmerwechsel"
+          "calendar_show_room_change": "Kalender - Raumwechsel",
+          "homework_display": "Hausaufgaben - Anzeigemodus"
         },
         "data_description": {
           "calendar_description": "Bestimme, was in der Beschreibung eines Kalender-Events stehen soll.",
           "calendar_replace_name": "Bsp:\nCancelled: ❌",
           "calendar_room": "Bestimme, was im Kalender als Ort angezeigt wird.",
           "calendar_show_cancelled_lessons": "Zeige ausfallende Stunden im Kalender an.",
-          "calendar_show_room_change": "Zeige Zimmerwechsel im Kalender an."
+          "calendar_show_room_change": "Zeige Raumwechsel im Kalender an.",
+          "homework_display": "Wähle, wie Hausaufgaben im Hausaufgaben-Kalender erscheinen: als Zeitspanne vom Erteilungs- bis zum Fälligkeitstag (Standard) oder nur am Fälligkeitstag."
         },
         "description": "Einstellungen zur Kalender Darstellung.",
         "title": "Kalender-Einstellungen"
       },
       "edit_live_activity": {
-        "title": "Live Stundenplan",
+        "title": "Live-Stundenplan",
         "description": "Live Activity für den Stundenplan hinzufügen oder bearbeiten.",
         "data": {
           "name": "Name",
@@ -237,6 +239,13 @@
         "data_description": {
           "start_offset": "Minuten vor der ersten Stunde.",
           "end_offset": "Minuten nach der letzten Stunde."
+        }
+      },
+      "edit_live_activity_select": {
+        "title": "Live-Stundenplan",
+        "description": "Wähle den Live-Stundenplan aus, der bearbeitet werden soll.",
+        "data": {
+          "services": "Live-Stundenplan"
         }
       },
       "edit_notify_service": {
@@ -280,8 +289,8 @@
           "calendar": "Kalender",
           "filter": "Filter",
           "lesson": "Stunden-Darstellung",
-          "live_activities_menu": "Live Stundenplan",
-          "notify_menu": "Notify Menü"
+          "live_activities_menu": "Live-Stundenplan (Live Activities)",
+          "notify_menu": "Benarichtigungen"
         }
       },
       "lesson": {
@@ -302,12 +311,12 @@
         "title": "Stunden-Darstellungs-Einstellungen"
       },
       "live_activities_menu": {
-        "title": "Live Stundenplan",
+        "title": "Live-Stundenplan",
         "menu_options": {
-          "edit_live_activity": "Live Stundenplan hinzufügen",
-          "edit_live_activity_select": "Live Stundenplan bearbeiten",
-          "remove_live_activity": "Live Stundenplan löschen",
-          "test_live_activity": "Live Stundenplan testen"
+          "edit_live_activity": "Live-Stundenplan hinzufügen",
+          "edit_live_activity_select": "Live-Stundenplan bearbeiten",
+          "remove_live_activity": "Live-Stundenplan löschen",
+          "test_live_activity": "Live-Stundenplan testen"
         }
       },
       "notify_menu": {
@@ -318,6 +327,20 @@
           "test_notify_service": "Notify Dienst testen"
         },
         "title": "Notify Dienst"
+      },
+      "remove_live_activity": {
+        "title": "Live-Stundenplan",
+        "description": "Wähle die Live-Stundenpläne aus, die entfernt werden sollen.",
+        "data": {
+          "services": "Live-Stundenpläne"
+        }
+      },
+      "test_live_activity": {
+        "title": "Live-Stundenplan",
+        "description": "Wähle die Live-Stundenpläne aus, an die eine Testbenachrichtigung gesendet werden soll.",
+        "data": {
+          "services": "Live-Stundenpläne"
+        }
       }
     },
     "error": {
@@ -340,6 +363,12 @@
     "live_activity_platform": {
       "options": {
         "ios": "iOS"
+      }
+    },
+    "homework_display": {
+      "options": {
+        "due_date": "Nur am Fälligkeitstag",
+        "span": "Zeitspanne (Erteilung bis Fälligkeit)"
       }
     },
     "notify_options": {
